@@ -2,17 +2,39 @@ require('dotenv').config()
 
 const { Telegraf, Markup } = require('telegraf')
 const express = require('express')
+const { createClient } = require('@supabase/supabase-js')
 
 const bot = new Telegraf(process.env.BOT_TOKEN)
 const app = express()
 
 const ADMIN_ID = Number(process.env.ADMIN_ID)
 
+const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_ANON_KEY
+)
+
 // ================= START =================
 
 bot.start(async (ctx) => {
 
-    ctx.reply(
+    try {
+
+        await supabase
+            .from('users')
+            .upsert({
+                telegram_id: String(ctx.from.id),
+                username: ctx.from.username || '',
+                first_name: ctx.from.first_name || ''
+            })
+
+    } catch (error) {
+
+        console.log('SUPABASE ERROR:', error.message)
+
+    }
+
+    await ctx.reply(
         '🎮 به دستیار گیمینگ خوش آمدی',
         Markup.inlineKeyboard([
             [Markup.button.callback('🔥 آموزش GTA V', 'gta')],
@@ -160,7 +182,15 @@ bot.command('panel', async (ctx) => {
 
     if (ctx.from.id !== ADMIN_ID) return
 
-    await ctx.reply('📊 پنل مدیریت فعال است')
+    const { count } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+
+    await ctx.reply(
+        `📊 پنل مدیریت
+
+👥 تعداد کاربران: ${count || 0}`
+    )
 
 })
 
