@@ -9,7 +9,7 @@ const app = express()
 
 const ADMIN_ID = Number(process.env.ADMIN_ID)
 
-const db = new sqlite3.Database('./database.db')
+//const db = new sqlite3.Database('./database.db')
 
 // ================= DATABASE =================
 
