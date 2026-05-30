@@ -2,37 +2,15 @@ require('dotenv').config()
 
 const { Telegraf, Markup } = require('telegraf')
 const express = require('express')
-//const sqlite3 = require('sqlite3').verbose()
 
 const bot = new Telegraf(process.env.BOT_TOKEN)
 const app = express()
 
 const ADMIN_ID = Number(process.env.ADMIN_ID)
 
-//const db = new sqlite3.Database('./database.db')
-
-// ================= DATABASE =================
-
-db.serialize(() => {
-
-    db.run(`
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            telegram_id TEXT,
-            username TEXT
-        )
-    `)
-
-})
-
 // ================= START =================
 
 bot.start(async (ctx) => {
-
-    db.run(
-        'INSERT INTO users(telegram_id, username) VALUES(?, ?)',
-        [ctx.from.id, ctx.from.username || 'none']
-    )
 
     ctx.reply(
         '🎮 به دستیار گیمینگ خوش آمدی',
@@ -50,7 +28,7 @@ bot.start(async (ctx) => {
 
 bot.action('gta', async (ctx) => {
 
-    ctx.editMessageText(
+    await ctx.editMessageText(
         '🎮 بخش GTA V',
         {
             reply_markup: {
@@ -69,7 +47,7 @@ bot.action('gta', async (ctx) => {
 
 bot.action('pubg', async (ctx) => {
 
-    ctx.editMessageText(
+    await ctx.editMessageText(
         '⚔ بخش PUBG',
         {
             reply_markup: {
@@ -88,7 +66,7 @@ bot.action('pubg', async (ctx) => {
 
 bot.action('youtube', async (ctx) => {
 
-    ctx.reply('🎥 آخرین ویدیو:\\nhttps://youtube.com/')
+    await ctx.reply('🎥 آخرین ویدیو یوتیوب:\nhttps://youtube.com/')
 
 })
 
@@ -96,7 +74,7 @@ bot.action('youtube', async (ctx) => {
 
 bot.action('files', async (ctx) => {
 
-    ctx.reply('📂 فایل‌های دانلودی بزودی اضافه میشن')
+    await ctx.reply('📂 فایل‌های دانلودی به زودی اضافه می‌شوند.')
 
 })
 
@@ -104,7 +82,7 @@ bot.action('files', async (ctx) => {
 
 bot.action('support', async (ctx) => {
 
-    ctx.reply('📞 آیدی پشتیبانی:\\n@support')
+    await ctx.reply('📞 آیدی پشتیبانی:\n@support')
 
 })
 
@@ -112,9 +90,11 @@ bot.action('support', async (ctx) => {
 
 bot.action('back', async (ctx) => {
 
-    ctx.deleteMessage()
+    try {
+        await ctx.deleteMessage()
+    } catch {}
 
-    ctx.reply(
+    await ctx.reply(
         '🎮 منوی اصلی',
         Markup.inlineKeyboard([
             [Markup.button.callback('🔥 آموزش GTA V', 'gta')],
@@ -137,30 +117,22 @@ bot.on('text', async (ctx) => {
 
     const text = ctx.message.text.toLowerCase()
 
-    // ضد لینک
     if (text.includes('http')) {
 
         try {
-
             await ctx.deleteMessage()
-
-            ctx.reply('🚫 ارسال لینک ممنوع است')
-
+            await ctx.reply('🚫 ارسال لینک ممنوع است')
         } catch {}
 
     }
 
-    // ضد فحش
     for (const word of badWords) {
 
         if (text.includes(word)) {
 
             try {
-
                 await ctx.deleteMessage()
-
-                ctx.reply('🚫 پیام نامناسب حذف شد')
-
+                await ctx.reply('🚫 پیام نامناسب حذف شد')
             } catch {}
 
         }
@@ -175,7 +147,7 @@ bot.on('new_chat_members', async (ctx) => {
 
     const user = ctx.message.new_chat_members[0]
 
-    ctx.reply(
+    await ctx.reply(
         `🎮 خوش آمدی ${user.first_name}
 قوانین گروه را رعایت کن.`
     )
@@ -188,15 +160,7 @@ bot.command('panel', async (ctx) => {
 
     if (ctx.from.id !== ADMIN_ID) return
 
-    db.all('SELECT * FROM users', (err, rows) => {
-
-        ctx.reply(
-            `📊 پنل مدیریت
-
-👥 تعداد کاربران: ${rows.length}`
-        )
-
-    })
+    await ctx.reply('📊 پنل مدیریت فعال است')
 
 })
 
@@ -208,7 +172,9 @@ app.get('/', (req, res) => {
 
 })
 
-app.listen(3000, () => {
+const PORT = process.env.PORT || 3000
+
+app.listen(PORT, () => {
 
     console.log('WEB SERVER RUNNING')
 
