@@ -2,7 +2,7 @@ require('dotenv').config()
 
 const { Telegraf, Markup } = require('telegraf')
 const express = require('express')
-const sqlite3 = require('sqlite3').verbose()
+//const sqlite3 = require('sqlite3').verbose()
 
 const bot = new Telegraf(process.env.BOT_TOKEN)
 const app = express()
